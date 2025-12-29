@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Portfolio Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+</head>
+
+<body>
+    <div class="container animate-fade">
+        <header class="main-nav">
+            <div class="nav-container">
+                <div class="logo-title">
+                    <img src="favicon.svg" alt="Logo" class="header-logo">
+                    <h1>Crypto Tracker</h1>
+                </div>
+
+                <div class="nav-actions">
+                    <nav class="nav-links" id="navLinks">
+                        <a href="#overview">Overview</a>
+                        <a href="#analytics">Analytics</a>
+                        <a href="#management">Management</a>
+                        <a href="#portfolio">Portfolio</a>
+                        <a href="../index.html">Budget App</a>
+                    </nav>
+
+                    <button onclick="toggleTheme()" class="theme-toggle-btn" id="themeToggle">
+                        <span id="themeEmoji">🌙</span>
+                        <span id="themeLabel">Dark</span>
+                    </button>
+
+                    <button class="mobile-menu-toggle" id="menuToggle" aria-label="Toggle Menu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            <!-- Add Coin Form -->
+            <div class="form-section reveal-section" id="management">
+                <div class="section-header">
+                    <h2>Add New Asset</h2>
+                </div>
+                <form id="coinForm">
+                    <div>
+                        <label class="card-label">Coin Name</label>
+                        <input type="text" id="coinName" placeholder="e.g. Bitcoin" required>
+                    </div>
+                    <div>
+                        <label class="card-label">Purchase Price ($)</label>
+                        <input type="number" id="purchasePrice" placeholder="0.00" step="any" required
+                            oninput="calculateSync('price')">
+                    </div>
+                    <div>
+                        <label class="card-label">Holdings (Crypto)</label>
+                        <input type="number" id="shares" placeholder="0.0000" step="any" required
+                            oninput="calculateSync('shares')">
+                    </div>
+                    <div>
+                        <label class="card-label">Investment ($)</label>
+                        <input type="number" id="investmentInput" placeholder="0.00" step="any" required
+                            oninput="calculateSync('investment')">
+                    </div>
+                    <div>
+                        <label class="card-label">Live Price ($)</label>
+                        <input type="number" id="currentPrice" placeholder="0.00" step="any" required>
+                    </div>
+                    <div>
+                        <label class="card-label">Purchase Date</label>
+                        <input type="date" id="purchaseDate" required>
+                    </div>
+                    <button type="submit">Add Asset</button>
+                </form>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar reveal-section">
+                <div class="filter-group search-group">
+                    <label>Search coins...</label>
+                    <div class="input-with-icon">
+                        <svg class="icon search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="searchInput" placeholder="Search by name..." oninput="filterTable()">
+                    </div>
+                </div>
+
+                <div class="filter-group select-group">
+                    <label>Filter & Sort</label>
+                    <select id="coinFilter" onchange="filterTable()">
+                        <option value="all">All Assets</option>
+                        <option value="pl_positive">Positive P/L (%)</option>
+                        <option value="pl_negative">Negative P/L (%)</option>
+                        <option disabled>──────────</option>
+                        <option value="pl_high">Sort: Highest P/L %</option>
+                        <option value="pl_low">Sort: Lowest P/L %</option>
+                        <option disabled>──────────</option>
+                    </select>
+                </div>
+
+                <div class="filter-action">
+                    <svg class="icon action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="7" y1="12" x2="17" y2="12"></line>
+                        <line x1="10" y1="18" x2="14" y2="18"></line>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Dashboard Summary -->
+            <div class="dashboard reveal-section" id="overview">
+                <div class="card">
+                    <span class="card-label">Total Investment</span>
+                    <span class="card-value">$<span id="totalInvestment">0.00</span></span>
+                </div>
+                <div class="card">
+                    <span class="card-label">Current Value</span>
+                    <span class="card-value">$<span id="currentValue">0.00</span></span>
+                </div>
+                <div class="card">
+                    <span class="card-label">Total Profit/Loss</span>
+                    <span class="card-value"><span id="totalPL">0.00</span> (<span
+                            id="totalPLPercent">0.00</span>%)</span>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid reveal-section" id="analytics">
+                <div class="chart-card">
+                    <h3>Portfolio Allocation</h3>
+                    <div class="chart-container">
+                        <canvas id="allocationChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Portfolio Trend</h3>
+                        <div class="chart-filters" id="timeFilters">
+                            <button class="filter-chip active" data-range="all">All</button>
+                            <button class="filter-chip" data-range="1Y">1Y</button>
+                            <button class="filter-chip" data-range="6M">6M</button>
+                            <button class="filter-chip" data-range="1M">1M</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="valueTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Portfolio Table -->
+        <div class="table-wrapper reveal-section" id="portfolio">
+            <table id="portfolioTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Coin</th>
+                        <th onclick="sortTable(1)">Weight %</th>
+                        <th onclick="sortTable(2)">Avg. Price</th>
+                        <th onclick="sortTable(3)">Live Price</th>
+                        <th onclick="sortTable(4)"># of shares</th>
+                        <th onclick="sortTable(5)">Date</th>
+                        <th onclick="sortTable(6)">Investment</th>
+                        <th onclick="sortTable(7)">Current Value</th>
+                        <th onclick="sortTable(8)">P/L ($)</th>
+                        <th onclick="sortTable(9)">P/L (%)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div> <!-- table-wrapper end -->
+    </div> <!-- content-wrapper end -->
+    </div> <!-- container end -->
+
+    <button id="mobileFab" class="mobile-fab" title="Add Asset">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+    </button>
+
+    <script>
+        let portfolio = JSON.parse(localStorage.getItem('cryptoPortfolio')) || [];
+        let historicalData = JSON.parse(localStorage.getItem('cryptoHistoricalSnapshots')) || [];
+        let currentRange = 'all';
+        const tableBody = document.querySelector('#portfolioTable tbody');
+        const totalInvestmentEl = document.getElementById('totalInvestment');
+        const currentValueEl = document.getElementById('currentValue');
+        const totalPLEl = document.getElementById('totalPL');
+        const totalPLPercentEl = document.getElementById('totalPLPercent');
+        let isEditing = false;
+        let allocationChart = null;
+        let valueTrendChart = null;
+
+        // Register the datalabels plugin
+        Chart.register(ChartDataLabels);
+
+        function toggleTheme() {
+            const isLight = document.documentElement.classList.toggle('light-theme');
+            localStorage.setItem('cryptoTheme', isLight ? 'light' : 'dark');
+            updateThemeUI(isLight);
+
+            // Re-initialize charts to update tick/label colors
+            if (allocationChart) allocationChart.destroy();
+            if (valueTrendChart) valueTrendChart.destroy();
+            initCharts();
+            calculateAndRender();
+        }
+
+        function updateThemeUI(isLight) {
+            const emoji = document.getElementById('themeEmoji');
+            const label = document.getElementById('themeLabel');
+            emoji.textContent = isLight ? '☀️' : '🌙';
+            label.textContent = isLight ? 'Light Mode' : 'Dark Mode';
+        }
+
+        function savePortfolio() {
+            localStorage.setItem('cryptoPortfolio', JSON.stringify(portfolio));
+        }
+
+        function calculateSync(type) {
+            const price = parseFloat(document.getElementById('purchasePrice').value);
+            const sharesInput = document.getElementById('shares');
+            const investmentInput = document.getElementById('investmentInput');
+
+            if (isNaN(price) || price <= 0) return;
+
+            if (type === 'shares' || type === 'price') {
+                const shares = parseFloat(sharesInput.value);
+                if (!isNaN(shares)) {
+                    investmentInput.value = (price * shares).toFixed(2);
+                }
+            } else if (type === 'investment') {
+                const investment = parseFloat(investmentInput.value);
+                if (!isNaN(investment)) {
+                    sharesInput.value = (investment / price).toFixed(6);
+                }
+            }
+        }
+
+        function deleteCoin(index) {
+            portfolio.splice(index, 1);
+            savePortfolio();
+            calculateAndRender();
+        }
+
+        function updateFilterOptions() {
+            const filterSelect = document.getElementById('coinFilter');
+            const currentFilter = filterSelect.value;
+            const uniqueCoins = [...new Set(portfolio.map(c => c.name))].sort();
+
+            // Keep the static options
+            const staticOptions = [
+                { value: 'all', text: 'All Assets' },
+                { value: 'pl_positive', text: 'Positive P/L (%)' },
+                { value: 'pl_negative', text: 'Negative P/L (%)' },
+                { value: 'pl_high', text: 'Sort: Highest P/L %' },
+                { value: 'pl_low', text: 'Sort: Lowest P/L %' }
+            ];
+
+            const existingValues = staticOptions.map(o => o.value);
+
+            filterSelect.innerHTML = '';
+            staticOptions.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.value;
+                option.textContent = opt.text;
+                filterSelect.appendChild(option);
+            });
+
+            const divider = document.createElement('option');
+            divider.disabled = true;
+            divider.textContent = '──────────';
+            filterSelect.appendChild(divider);
+
+            uniqueCoins.forEach(coin => {
+                const option = document.createElement('option');
+                option.value = coin;
+                option.textContent = coin;
+                filterSelect.appendChild(option);
+            });
+
+            filterSelect.value = (existingValues.includes(currentFilter) || uniqueCoins.includes(currentFilter)) ? currentFilter : 'all';
+        }
+
+        function updatePrice(index, newPrice) {
+            const price = parseFloat(newPrice.replace('$', '').replace(/,/g, ''));
+            if (!isNaN(price)) {
+                portfolio[index].currentPrice = price.toFixed(2);
+                savePortfolio();
+            }
+            isEditing = false;
+            calculateAndRender();
+        }
+
+        function calculateAndRender() {
+            if (isEditing) return; // Don't re-render while user is typing
+
+            tableBody.innerHTML = '';
+            let totalInvestment = 0;
+            let totalCurrent = 0;
+
+            // First pass: calculate total investment
+            portfolio.forEach(coin => {
+                totalInvestment += parseFloat(coin.purchasePrice) * parseFloat(coin.shares);
+            });
+
+            portfolio.forEach((coin, index) => {
+                const purchaseValue = coin.purchasePrice * coin.shares;
+                const currentValue = coin.currentPrice * coin.shares;
+                const profit = currentValue - purchaseValue;
+                const plPercent = purchaseValue ? ((profit / purchaseValue) * 100).toFixed(2) : 0;
+                const dynamicWeight = totalInvestment ? ((purchaseValue / totalInvestment) * 100).toFixed(2) : 0;
+
+                totalCurrent += currentValue;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td data-label="Coin">
+                        <div class="coin-name">
+                            <div class="coin-icon">${coin.name.charAt(0).toUpperCase()}</div>
+                            ${coin.name}
+                        </div>
+                    </td>
+                    <td data-label="Weight %">${dynamicWeight}%</td>
+                    <td data-label="Avg. Price">$${parseFloat(coin.purchasePrice).toLocaleString()}</td>
+                    <td data-label="Live Price" contenteditable="true" 
+                        onfocus="isEditing=true" 
+                        onblur="updatePrice(${index}, this.innerText)"
+                        style="cursor: pointer; background: rgba(88, 166, 255, 0.05); border-radius: 4px;"
+                        title="Click to edit price"
+                    >$${parseFloat(coin.currentPrice).toLocaleString()}</td>
+                    <td data-label="# of shares">${parseFloat(coin.shares).toLocaleString()}</td>
+                    <td data-label="Date">${coin.date}</td>
+                    <td data-label="Investment">$${purchaseValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td data-label="Current Value">$${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td data-label="P/L ($)" class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${profit.toFixed(2)}</td>
+                    <td data-label="P/L (%)" class="${profit >= 0 ? 'positive' : 'negative'}">${profit >= 0 ? '+' : ''}${plPercent}%</td>
+                    <td data-label="Actions">
+                        <button onclick="deleteCoin(${index})" class="delete-btn">Remove</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            const totalProfit = totalCurrent - totalInvestment;
+
+            totalInvestmentEl.textContent = totalInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            currentValueEl.textContent = totalCurrent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            totalPLEl.textContent = (totalProfit >= 0 ? '+' : '') + totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            totalPLEl.className = totalProfit >= 0 ? 'positive' : 'negative';
+
+            const totalPLPercent = totalInvestment ? ((totalProfit / totalInvestment) * 100).toFixed(2) : '0.00';
+            totalPLPercentEl.textContent = totalPLPercent;
+
+            updateFilterOptions();
+            updateHistoricalData(totalInvestment, totalCurrent);
+            updateCharts(portfolio, totalCurrent);
+        }
+
+        function updateHistoricalData(totalInvestment, totalValue) {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+
+            // Check if we already have an entry for today
+            const lastEntry = historicalData[historicalData.length - 1];
+            if (lastEntry && lastEntry.date === today) {
+                lastEntry.investment = totalInvestment.toFixed(2);
+                lastEntry.value = totalValue.toFixed(2);
+            } else {
+                historicalData.push({
+                    date: today,
+                    investment: totalInvestment.toFixed(2),
+                    value: totalValue.toFixed(2)
+                });
+            }
+
+            // Keep only the last 30 entries for historical accuracy
+            if (historicalData.length > 30) historicalData.shift();
+
+            localStorage.setItem('cryptoHistoricalSnapshots', JSON.stringify(historicalData));
+        }
+
+        function initCharts() {
+            const ctxAllocation = document.getElementById('allocationChart').getContext('2d');
+            allocationChart = new Chart(ctxAllocation, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [
+                            '#ff9f43', '#58a6ff', '#3fb950', '#f85149', '#a371f7',
+                            '#d1d5da', '#0366d6', '#28a745', '#d73a49', '#6f42c1'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: window.innerWidth < 768 ? 'bottom' : 'right',
+                            labels: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                                usePointStyle: true,
+                                padding: window.innerWidth < 768 ? 10 : 20,
+                                font: { size: window.innerWidth < 768 ? 10 : 12 }
+                            }
+                        },
+                        datalabels: {
+                            formatter: (value, ctx) => {
+                                let sum = 0;
+                                let dataArr = ctx.chart.data.datasets[0].data;
+                                dataArr.map(data => {
+                                    sum += data;
+                                });
+                                let percentage = (value * 100 / sum).toFixed(1) + "%";
+                                return percentage;
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            },
+                            textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                            textShadowBlur: 4,
+                            anchor: 'center',
+                            align: 'center'
+                        }
+                    }
+                }
+            });
+
+            const ctxTrend = document.getElementById('valueTrendChart').getContext('2d');
+            valueTrendChart = new Chart(ctxTrend, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Portfolio Value',
+                            data: [],
+                            borderColor: '#58a6ff',
+                            backgroundColor: 'rgba(88, 166, 255, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#58a6ff',
+                            pointBorderColor: '#fff',
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Total Investment',
+                            data: [],
+                            borderColor: '#8b949e',
+                            borderDash: [5, 5],
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#8b949e',
+                            pointBorderColor: '#fff',
+                            pointHoverRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                                boxWidth: 12,
+                                boxHeight: 12,
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        },
+                        datalabels: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() || 'rgba(240, 246, 252, 0.05)' },
+                            ticks: {
+                                color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim(),
+                                callback: value => '$' + (value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value)
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts(portfolio, totalValue) {
+            if (!allocationChart || !valueTrendChart) return;
+
+            // Update Allocation Chart
+            const labels = portfolio.map(c => c.name);
+            const data = portfolio.map(c => c.purchasePrice * c.shares);
+
+            allocationChart.data.labels = labels;
+            allocationChart.data.datasets[0].data = data;
+            allocationChart.update();
+
+            // Update Trend Chart with REAL historical data & Filtering
+            const filteredData = getFilteredHistoricalData(currentRange);
+
+            if (filteredData.length > 0) {
+                valueTrendChart.data.labels = filteredData.map(d => d.label);
+                valueTrendChart.data.datasets[0].data = filteredData.map(d => d.value);
+                valueTrendChart.data.datasets[1].data = filteredData.map(d => d.investment);
+            } else {
+                valueTrendChart.data.labels = ['No Data'];
+                valueTrendChart.data.datasets[0].data = [0];
+                valueTrendChart.data.datasets[1].data = [0];
+            }
+            valueTrendChart.update();
+        }
+
+        function getFilteredHistoricalData(range) {
+            if (historicalData.length === 0) return [];
+
+            const now = new Date();
+            let startDate = new Date(0); // Default for 'all'
+
+            if (range === '1M') startDate = new Date(now.setDate(now.getDate() - 30));
+            else if (range === '6M') startDate = new Date(now.setMonth(now.getMonth() - 6));
+            else if (range === '1Y') startDate = new Date(now.setFullYear(now.getFullYear() - 1));
+
+            let filtered = historicalData.filter(h => new Date(h.date) >= startDate);
+
+            // Group by month if range is 1Y or All and we have many points
+            if ((range === '1Y' || range === 'all') && filtered.length > 45) {
+                const months = {};
+                filtered.forEach(h => {
+                    const monthKey = h.date.substring(0, 7); // YYYY-MM
+                    if (!months[monthKey]) months[monthKey] = h;
+                    else months[monthKey] = h; // Keep the latest for each month
+                });
+                filtered = Object.values(months);
+            }
+
+            // Map to chart format
+            return filtered.map(h => ({
+                label: new Date(h.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+                value: h.value,
+                investment: h.investment || h.value
+            }));
+        }
+
+        // Add filter listeners
+        document.querySelectorAll('.filter-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentRange = btn.dataset.range;
+                calculateAndRender();
+            });
+        });
+
+        document.getElementById('coinForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const coin = {
+                name: document.getElementById('coinName').value,
+                purchasePrice: parseFloat(document.getElementById('purchasePrice').value),
+                currentPrice: parseFloat(document.getElementById('currentPrice').value),
+                shares: parseFloat(document.getElementById('shares').value),
+                date: document.getElementById('purchaseDate').value
+            };
+            portfolio.push(coin);
+            savePortfolio();
+            calculateAndRender();
+            e.target.reset();
+        });
+
+        // Initialize
+        if (localStorage.getItem('cryptoTheme') === 'light') {
+            document.documentElement.classList.add('light-theme');
+            updateThemeUI(true);
+        }
+        initCharts();
+        calculateAndRender();
+
+        // Reveal animations on scroll
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal-section').forEach(section => {
+            revealObserver.observe(section);
+        });
+
+        // Sort table
+        function sortTable(n) {
+            let rows = Array.from(tableBody.rows);
+            let asc = tableBody.dataset.sortAsc !== 'true';
+            rows.sort((a, b) => {
+                let valA = a.cells[n].innerText.replace('$', '').replace(/,/g, '');
+                let valB = b.cells[n].innerText.replace('$', '').replace(/,/g, '');
+                let numA = parseFloat(valA);
+                let numB = parseFloat(valB);
+                if (!isNaN(numA) && !isNaN(numB)) return asc ? numA - numB : numB - numA;
+                return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+            rows.forEach(row => tableBody.appendChild(row));
+            tableBody.dataset.sortAsc = asc;
+        }
+
+        // Update chart resize logic
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (allocationChart) {
+                    allocationChart.options.plugins.legend.position = window.innerWidth < 768 ? 'bottom' : 'right';
+                    allocationChart.update();
+                }
+            }, 250);
+        });
+
+        // Search/filter/sort
+        function filterTable() {
+            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
+            const filterValue = document.getElementById('coinFilter').value;
+            let rows = Array.from(tableBody.rows);
+
+            // Handle Sorting first if requested
+            if (filterValue === 'pl_high' || filterValue === 'pl_low') {
+                rows.sort((a, b) => {
+                    const plA = parseFloat(a.cells[9].innerText.replace('%', '')) || 0;
+                    const plB = parseFloat(b.cells[9].innerText.replace('%', '')) || 0;
+                    return filterValue === 'pl_high' ? plB - plA : plA - plB;
+                });
+                rows.forEach(row => tableBody.appendChild(row));
+            }
+
+            // Apply visibility filters
+            rows.forEach(row => {
+                const coinName = row.cells[0].innerText.toLowerCase();
+                const actualName = row.cells[0].innerText.trim();
+                const plValue = parseFloat(row.cells[9].innerText.replace('%', '')) || 0;
+
+                const matchesSearch = coinName.includes(searchFilter);
+
+                let matchesFilter = true;
+                if (filterValue === 'pl_positive') {
+                    matchesFilter = plValue > 0;
+                } else if (filterValue === 'pl_negative') {
+                    matchesFilter = plValue < 0;
+                } else if (filterValue !== 'all' && filterValue !== 'pl_high' && filterValue !== 'pl_low') {
+                    // It's a specific coin filter
+                    matchesFilter = actualName.includes(filterValue);
+                }
+
+                row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+            });
+        }
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Close mobile menu when a link is clicked
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!navLinks.contains(e.target) && !menuToggle.contains(e.target)) {
+                navLinks.classList.remove('active');
+            }
+        });
+
+        // FAB scroll to form
+        document.getElementById('mobileFab').addEventListener('click', () => {
+            document.getElementById('management').scrollIntoView({ behavior: 'smooth' });
+        });
+    </script>
+</body>
+
+</html>
