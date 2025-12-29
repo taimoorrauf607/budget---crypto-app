@@ -44,7 +44,7 @@
     </script>
 </head>
 
-<body class="bg-[#F0F2F5] text-[#333333]">
+<body class="transition-colors duration-300">
     <!-- Dollar Splash Overlay -->
     <div id="dollar-splash-overlay">
         <div class="dollar-splash-center">
@@ -441,7 +441,7 @@
                                         title={tab.label}
                                     >
                                         <tab.icon />
-                                        <span className="hidden sm:inline font-outfit">{tab.label}</span>
+                                        <span className="hidden md:inline font-outfit">{tab.label}</span>
                                     </a>
                                 ) : (
                                     <div
@@ -450,7 +450,7 @@
                                         className={`nav-link ${view === tab.id ? 'active' : ''}`}
                                     >
                                         <tab.icon />
-                                        <span className="hidden sm:inline font-outfit">{tab.label}</span>
+                                        <span className="hidden md:inline font-outfit">{tab.label}</span>
                                     </div>
                                 )
                             ))}
@@ -459,8 +459,8 @@
                         <div className="nav-profile">
                             <button
                                 onClick={toggleTheme}
-                                className="w-10 h-10 rounded-xl bg-var(--input-bg) flex items-center justify-center text-xl hover:scale-110 transition-transform shadow-sm border border-var(--border-color)"
-                                style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--border-color)' }}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center text-xl hover:scale-110 transition-transform shadow-sm border border-[var(--border-color)]"
+                                style={{ backgroundColor: 'var(--input-bg)' }}
                                 title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
                             >
                                 {theme === 'light' ? '🌙' : '☀️'}
@@ -890,9 +890,9 @@
                                                     {months.map(m => <option key={m}>{m}</option>)}
                                                 </select>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-64">
-                                                <div className="h-full relative"><canvas ref={barRef}></canvas></div>
-                                                <div className="h-full relative flex items-center justify-center">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 min-h-[300px] md:h-64">
+                                                <div className="h-64 md:h-full relative"><canvas ref={barRef}></canvas></div>
+                                                <div className="h-64 md:h-full relative flex items-center justify-center">
                                                     {Object.keys(expensesByCategory).length > 0 ? <canvas ref={doughnutRef}></canvas> : <div className="text-[#94a3b8]">No expenses yet</div>}
                                                 </div>
                                             </div>

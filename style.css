@@ -379,6 +379,71 @@ body.dark-theme #dollar-splash-overlay {
   justify-content: space-between;
 }
 
+@media (max-width: 768px) {
+  .nav-bar-wrapper {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    height: 70px;
+    border-top: 1px solid var(--border-color);
+    border-bottom: none;
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: content-box;
+  }
+
+  .nav-bar-container {
+    height: 100%;
+    padding: 0 10px;
+    justify-content: center;
+  }
+
+  .nav-brand {
+    display: none;
+  }
+
+  .nav-links {
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    justify-content: space-around;
+    gap: 0;
+  }
+
+  .nav-link {
+    flex-direction: column;
+    padding: 8px 5px;
+    gap: 4px;
+    font-size: 10px;
+    min-width: 60px;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .nav-link svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-profile {
+    display: flex;
+    gap: 8px;
+  }
+
+  .user-badge {
+    display: none;
+  }
+
+  .btn-logout-mini {
+    padding: 8px;
+  }
+
+  .nav-bar-wrapper {
+    background: var(--card-bg);
+    /* Use solid color on mobile for better visibility */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  }
+}
+
 .nav-brand {
   display: flex;
   align-items: center;
@@ -651,7 +716,7 @@ body.dark-theme #dollar-splash-overlay {
 
 .modern-input-group {
   position: relative;
-  background: #F9FAFB;
+  background: var(--input-bg);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   transition: all 0.3s ease;
@@ -660,7 +725,7 @@ body.dark-theme #dollar-splash-overlay {
 
 .modern-input-group:focus-within {
   border-color: var(--primary-blue);
-  background: #FFFFFF;
+  background: var(--card-bg);
   box-shadow: 0 0 0 4px rgba(45, 127, 249, 0.1);
 }
 
@@ -676,13 +741,20 @@ body.dark-theme #dollar-splash-overlay {
   font-family: 'Inter', sans-serif;
 }
 
-.modern-input-group select {
-  appearance: none;
-  cursor: pointer;
+.modern-input-group input::placeholder,
+.modern-input-group select::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+body.dark-theme .modern-input-group input::placeholder,
+body.dark-theme .modern-input-group select::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 .modern-input-group select option {
-  background-color: white;
+  background-color: var(--card-bg);
   color: var(--text-main);
   padding: 12px;
 }
@@ -728,7 +800,7 @@ body.dark-theme #dollar-splash-overlay {
   padding: 60px 40px;
   background: var(--card-bg);
   border-radius: 28px;
-  border: 2px dashed #F1F5F9;
+  border: 2px dashed var(--border-color);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -769,10 +841,71 @@ body.dark-theme #dollar-splash-overlay {
 }
 
 .transaction-card:hover {
-  background: #F9FAFB;
+  background: var(--input-bg);
   border-color: var(--primary-blue);
   transform: translateX(6px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* ===================================
+   RESPONSIVE OVERRIDES
+   =================================== */
+
+@media (max-width: 768px) {
+  #root {
+    padding: 10px;
+    padding-bottom: 90px;
+  }
+
+  header h2 {
+    font-size: 24px;
+  }
+
+  .grid-card {
+    padding: 16px;
+  }
+
+  .intro-card .text-4xl {
+    font-size: 28px;
+  }
+
+  .glass-panel {
+    padding: 16px !important;
+    border-radius: 16px;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+
+  .transaction-card {
+    padding: 12px;
+  }
+
+  .transaction-card .text-xl {
+    font-size: 16px;
+  }
+
+  .modern-input-group input,
+  .modern-input-group select {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .btn-add-transaction {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .intro-card .text-4xl {
+    font-size: 24px;
+  }
+
+  .nav-link {
+    font-size: 9px;
+    min-width: 50px;
+  }
 }
 
 .animate-slide-up {
