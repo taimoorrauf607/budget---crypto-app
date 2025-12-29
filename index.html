@@ -69,6 +69,28 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
+        // --- Configuration ---
+        const API_BASE_URL = 'http://localhost:5000'; // Update this to your Render URL after deployment
+
+        // --- Activity Tracking Helper ---
+        async function trackActivity(userId, actionType, metaData = {}) {
+            if (!userId) return;
+            try {
+                await fetch(`${API_BASE_URL}/events/track`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        action_type: actionType,
+                        meta_data: metaData,
+                        timestamp: new Date().toISOString()
+                    }),
+                });
+            } catch (err) {
+                console.warn('Activity tracking failed:', err);
+            }
+        }
+
         // --- Icons ---
         const Icons = {
             Dashboard: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>,
@@ -80,7 +102,8 @@
             Download: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>,
             Upload: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>,
             Settings: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>,
-            money: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            money: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>,
+            Admin: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
         };
 
         // --- Notification Component ---
@@ -120,6 +143,89 @@
                         <div className={`${barColor} h-2.5 rounded-full transition-all duration-1000 ease-out shadow-lg relative overflow-hidden`} style={{ width: `${percentage}%` }}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-shimmer"></div>
                         </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Admin Panel Component ---
+        function AdminPanel() {
+            const [users, setUsers] = useState([]);
+            const [selectedUser, setSelectedUser] = useState(null);
+            const [activities, setActivities] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                fetchUsers();
+            }, []);
+
+            async function fetchUsers() {
+                setLoading(true);
+                try {
+                    const res = await fetch(`${API_BASE_URL}/users`);
+                    const data = await res.json();
+                    setUsers(data.users || []);
+                } catch (err) {
+                    console.error('Failed to fetch users:', err);
+                }
+                setLoading(false);
+            }
+
+            async function fetchActivities(userId) {
+                setLoading(true);
+                try {
+                    const res = await fetch(`${API_BASE_URL}/events/${userId}`);
+                    const data = await res.json();
+                    setActivities(data.events || []);
+                } catch (err) {
+                    console.error('Failed to fetch activities:', err);
+                }
+                setLoading(false);
+            }
+
+            return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in">
+                    {/* User List */}
+                    <div className="md:col-span-1 glass-panel p-6 overflow-hidden flex flex-col h-[600px]">
+                        <h3 className="text-xl font-bold mb-4 font-outfit" style={{ color: 'var(--text-main)' }}>Registered Users</h3>
+                        {loading && !selectedUser ? <div className="text-center py-4">Loading...</div> : (
+                            <div className="overflow-y-auto pr-2 space-y-2">
+                                {users.map(u => (
+                                    <div
+                                        key={u.id}
+                                        onClick={() => { setSelectedUser(u); fetchActivities(u.id); }}
+                                        className={`p-4 rounded-xl cursor-pointer border transition-all ${selectedUser?.id === u.id ? 'border-primary bg-primary/10 shadow-lg' : 'border-transparent hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    >
+                                        <div className="font-bold truncate" style={{ color: 'var(--text-main)' }}>{u.name}</div>
+                                        <div className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{u.email}</div>
+                                        <div className="text-[10px] mt-1 opacity-60">Joined: {new Date(u.join_date).toLocaleDateString()}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Activity Log */}
+                    <div className="md:col-span-2 glass-panel p-6 flex flex-col h-[600px]">
+                        <h3 className="text-xl font-bold mb-4 font-outfit" style={{ color: 'var(--text-main)' }}>
+                            {selectedUser ? `Activities for ${selectedUser.name}` : 'Select a user to view activities'}
+                        </h3>
+                        {loading && selectedUser ? <div className="text-center py-4">Loading activities...</div> : (
+                            <div className="overflow-y-auto pr-2 space-y-4">
+                                {activities.length === 0 && selectedUser && <div className="text-center py-10 text-slate-400 italic">No activities tracked yet.</div>}
+                                {activities.map(act => (
+                                    <div key={act.id} className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)]">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-primary/20 text-primary">{act.action_type}</span>
+                                            <span className="text-[10px] text-slate-400">{new Date(act.timestamp).toLocaleString()}</span>
+                                        </div>
+                                        <div className="text-xs text-slate-500 font-mono bg-black/5 p-2 rounded">
+                                            {JSON.stringify(act.meta_data, null, 2)}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -190,6 +296,7 @@
         // --- Login/Auth Component ---
         function LoginScreen({ onLogin }) {
             const [isLogin, setIsLogin] = useState(true);
+            const [isAdminMode, setIsAdminMode] = useState(false);
             const [isForgotPassword, setIsForgotPassword] = useState(false);
             const [showPassword, setShowPassword] = useState(false);
             const [email, setEmail] = useState('');
@@ -229,14 +336,44 @@
                 setSuccess('');
                 setLoading(true);
 
-                if (!email || !password || (!isLogin && !name)) {
+                if (!email || !password || (!isLogin && !name && !isAdminMode)) {
                     setError('Please fill in all fields');
                     setLoading(false);
                     return;
                 }
 
-                setTimeout(() => {
+                // API Integration for Registration
+                const registerOnBackend = async (userData) => {
                     try {
+                        await fetch(`${API_BASE_URL}/users/register`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: userData.name,
+                                email: userData.email,
+                                country: 'Global', // Default
+                                join_date: new Date().toISOString()
+                            })
+                        });
+                    } catch (err) {
+                        console.error('Backend registration failed:', err);
+                    }
+                };
+
+                setTimeout(async () => {
+                    try {
+                        if (isAdminMode) {
+                            if (email === 'temii@budget.pro' && password === 'life123') {
+                                const adminUser = { name: 'Super Admin', email: 'admin@budget.pro', isAdmin: true };
+                                onLogin(adminUser);
+                                return;
+                            } else {
+                                setError('Invalid Admin credentials');
+                                setLoading(false);
+                                return;
+                            }
+                        }
+
                         const users = JSON.parse(localStorage.getItem('budgetUsers')) || {};
                         if (isLogin) {
                             const user = users[email];
@@ -251,6 +388,8 @@
                                 localStorage.setItem('rememberedEmails', JSON.stringify(updated));
                                 setRememberedEmails(updated);
                             }
+                            // Track Login
+                            trackActivity(email, 'login', { device: navigator.userAgent });
                             onLogin(user);
                         } else {
                             if (users[email]) {
@@ -268,6 +407,11 @@
                             users[email] = newUser;
                             localStorage.setItem('budgetUsers', JSON.stringify(users));
                             localStorage.setItem('currentUser', email);
+
+                            // Synchronize with Backend
+                            await registerOnBackend(newUser);
+                            trackActivity(email, 'signup', { plan: 'premium' });
+
                             onLogin(newUser);
                         }
                     } catch (err) {
@@ -325,8 +469,17 @@
 
                         <div className="form-pane">
                             <div className="form-wrapper">
-                                <h3>{isForgotPassword ? 'Reset' : (isLogin ? 'Sign in' : 'Sign up')}</h3>
-                                <p className="subtitle">Enter your details below</p>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h3>{isForgotPassword ? 'Reset' : (isAdminMode ? 'Admin Portal' : (isLogin ? 'Sign in' : 'Sign up'))}</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsAdminMode(!isAdminMode); setIsLogin(true); setError(''); }}
+                                        className={`text-[10px] px-3 py-1 rounded-full border transition-all ${isAdminMode ? 'bg-primary text-white border-primary' : 'text-slate-400 border-slate-200'}`}
+                                    >
+                                        {isAdminMode ? 'User Login' : 'Admin?'}
+                                    </button>
+                                </div>
+                                <p className="subtitle">{isAdminMode ? 'Access internal dashboard' : 'Enter your details below'}</p>
 
                                 {error && <div className="error-box">{error}</div>}
                                 {success && <div className="success-box">{success}</div>}
@@ -367,7 +520,7 @@
                                             <span className="show-toggle" onClick={() => setShowPassword(!showPassword)}>{showPassword ? 'HIDE' : 'SHOW'}</span>
                                         </div>
 
-                                        {!isLogin && (
+                                        {!isLogin && !isAdminMode && (
                                             <>
                                                 <div className="input-container">
                                                     <select value={securityQuestion} onChange={e => setSecurityQuestion(e.target.value)} required>
@@ -382,17 +535,19 @@
                                         )}
 
                                         <div className="form-options">
-                                            <label className="checkbox-container"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} /> Remember</label>
-                                            {isLogin && <button type="button" className="forgot-link" onClick={() => setIsForgotPassword(true)}>Forgot Password?</button>}
+                                            {!isAdminMode && <label className="checkbox-container"><input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} /> Remember</label>}
+                                            {isLogin && !isAdminMode && <button type="button" className="forgot-link" onClick={() => setIsForgotPassword(true)}>Forgot Password?</button>}
                                         </div>
 
-                                        <button type="submit" className="btn-primary">{isLogin ? 'Sign in' : 'Sign Up'}</button>
-                                        <div className="divider"><span>Or</span></div>
-                                        <button type="button" className="btn-secondary">Google Sign in</button>
-                                        <p className="signup-prompt">
-                                            {isLogin ? "No account? " : "Have account? "}
-                                            <button type="button" onClick={() => setIsLogin(!isLogin)}>{isLogin ? 'Sign Up' : 'Sign in'}</button>
-                                        </p>
+                                        <button type="submit" className="btn-primary">{isAdminMode ? 'Terminal Access' : (isLogin ? 'Sign in' : 'Sign Up')}</button>
+                                        {!isAdminMode && <div className="divider"><span>Or</span></div>}
+                                        {!isAdminMode && <button type="button" className="btn-secondary">Google Sign in</button>}
+                                        {!isAdminMode && (
+                                            <p className="signup-prompt">
+                                                {isLogin ? "No account? " : "Have account? "}
+                                                <button type="button" onClick={() => setIsLogin(!isLogin)}>{isLogin ? 'Sign Up' : 'Sign in'}</button>
+                                            </p>
+                                        )}
                                     </form>
                                 ) : (
                                     <form onSubmit={handleForgotPassword}>
@@ -431,8 +586,9 @@
                                 { id: 'loans', label: 'Loans', icon: Icons.Loans },
                                 { id: 'goalPlan', label: 'Planning', icon: Icons.Goals },
                                 { id: 'freelance', label: 'Freelance', icon: Icons.Freelance },
-                                { id: 'crypto', label: 'Crypto', icon: Icons.money, href: 'crypto app/index.html' }
-                            ].map(tab => (
+                                { id: 'crypto', label: 'Crypto', icon: Icons.money, href: 'crypto app/index.html' },
+                                user.isAdmin && { id: 'admin', label: 'Admin', icon: Icons.Admin }
+                            ].filter(Boolean).map(tab => (
                                 tab.href ? (
                                     <a
                                         key={tab.id}
@@ -482,9 +638,10 @@
 
         function MainDashboard({ user, onLogout, theme, toggleTheme }) {
             // --- State (User-specific data) ---
-            const userDataKey = (key) => `${user.email}_${key}`;
+            const userDataKey = (key) => `${user.isAdmin ? 'admin' : user.email}_${key}`;
 
             const [transactions, setTransactions] = useState(() => {
+                if (user.isAdmin) return [];
                 try {
                     return JSON.parse(localStorage.getItem(userDataKey('transactions'))) || [];
                 } catch {
@@ -514,7 +671,7 @@
             });
 
             // UI State
-            const [view, setView] = useState('dashboard');
+            const [view, setView] = useState(user.isAdmin ? 'admin' : 'dashboard');
             const [filterMonth, setFilterMonth] = useState('All');
             const [toasts, setToasts] = useState([]);
 
@@ -684,6 +841,7 @@
                 setAmount(''); setNotes(''); setIsRecurring(false);
                 if (type === 'loan') setSource('');
 
+                trackActivity(user.email, 'add_transaction', { type: finalType, amount: parseFloat(amount), source });
                 showToast('Success', 'Transaction added successfully');
             }
 
@@ -697,6 +855,7 @@
                     notes: 'Loan Settlement', recurring: false
                 };
                 setTransactions(prev => [newEntry, ...prev]);
+                trackActivity(user.email, 'settle_loan', { person, amount: parseFloat(amount) });
                 showToast('Settled', `Loan with ${person} settled`, 'success');
             }
 
@@ -704,6 +863,7 @@
                 if (!goalCategory || !goalAmount) return;
                 setBudgetGoals(prev => ({ ...prev, [goalCategory]: parseFloat(goalAmount) }));
                 setGoalCategory(''); setGoalAmount(''); setShowGoalModal(false);
+                trackActivity(user.email, 'set_budget_goal', { category: goalCategory, amount: parseFloat(goalAmount) });
                 showToast('Goal Set', `Budget for ${goalCategory} updated`);
             }
 
@@ -727,6 +887,7 @@
                 };
                 setFreelanceTasks(prev => [newTask, ...prev]);
                 setTaskName(''); setClientName(''); setTaskPayment(''); setTaskNotes('');
+                trackActivity(user.email, 'add_freelance_task', { task: taskName, payment: parseFloat(taskPayment) });
                 showToast('Task Added', 'Freelance task tracked');
             }
 
