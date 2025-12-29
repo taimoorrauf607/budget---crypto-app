@@ -845,7 +845,7 @@
                         {view === 'dashboard' && (
                             <div className="animate-slide-up">
                                 {/* Stats Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">
                                     <div className="grid-card intro-card income shadow-sm" style={{ animationDelay: '0.1s' }}>
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="text-xs font-black uppercase tracking-[0.15em] font-outfit" style={{ color: 'var(--income-accent)' }}>Total Income</div>
@@ -866,7 +866,7 @@
                                             <div className="h-full bg-rose-500 w-1/2 opacity-40"></div>
                                         </div>
                                     </div>
-                                    <div className="grid-card intro-card balance shadow-sm" style={{ animationDelay: '0.3s' }}>
+                                    <div className="grid-card intro-card balance shadow-sm col-span-2 lg:col-span-1" style={{ animationDelay: '0.3s' }}>
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="text-xs font-black uppercase tracking-[0.15em] font-outfit" style={{ color: 'var(--balance-accent)' }}>Net Balance</div>
                                             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm" style={{ backgroundColor: 'var(--input-bg)' }}>📊</div>
@@ -886,7 +886,7 @@
                                         <div className="glass-panel card-glow p-6 shadow-md">
                                             <div className="flex justify-between items-center mb-6">
                                                 <h2 className="section-title mb-0">📈 Analytics</h2>
-                                                <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="w-32 text-sm bg-white border-[#EEEEEE] focus:border-[#2D7FF9] transition-colors rounded-lg px-2 py-1 outline-none shadow-sm">
+                                                <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="w-32 text-sm border-[var(--border-color)] focus:border-[var(--primary-blue)] transition-colors rounded-lg px-2 py-1 outline-none shadow-sm" style={{ backgroundColor: 'var(--input-bg)', color: 'var(--text-main)' }}>
                                                     {months.map(m => <option key={m}>{m}</option>)}
                                                 </select>
                                             </div>
