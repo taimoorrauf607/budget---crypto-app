@@ -5,9 +5,17 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    password TEXT,
+    security_question TEXT,
+    security_answer TEXT,
     country TEXT,
     join_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration for existing tables (Run this if table already exists)
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS security_question TEXT;
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS security_answer TEXT;
 
 -- 2. Table: user_events
 CREATE TABLE IF NOT EXISTS user_events (

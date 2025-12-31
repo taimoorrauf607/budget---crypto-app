@@ -22,18 +22,26 @@ app.use(express.static(path.join(__dirname, '../')));
 
 // 1. POST /users/register - Register a new user
 app.post('/users/register', async (req, res) => {
-    const { name, email, country, join_date } = req.body;
+    const { name, email, password, security_question, security_answer, country, join_date } = req.body;
 
     // Basic validation
-    if (!name || !email) {
-        return res.status(400).json({ error: 'Name and email are required.' });
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
 
     try {
         // email uniqueness is handled by DB constraint, but we can catch it
         const { data, error } = await supabase
             .from('users')
-            .insert([{ name, email, country, join_date: join_date || new Date().toISOString() }])
+            .insert([{
+                name,
+                email,
+                password,
+                security_question,
+                security_answer,
+                country,
+                join_date: join_date || new Date().toISOString()
+            }])
             .select()
             .single();
 
@@ -48,6 +56,37 @@ app.post('/users/register', async (req, res) => {
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ error: 'Failed to register user. Please try again.' });
+    }
+});
+
+// 1.5. POST /users/login - Authenticate user
+app.post('/users/login', async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', email)
+            .single();
+
+        if (error || !data) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+
+        // In a real app, compare hashed password. Here we compare plain text as requested/implied by current storage.
+        if (data.password !== password) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+        }
+
+        res.json({ message: 'Login successful', user: data });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ error: 'Login failed.' });
     }
 });
 

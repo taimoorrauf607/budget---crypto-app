@@ -12,6 +12,17 @@
 </head>
 
 <body>
+    <!-- Splash Screen -->
+    <div id="dollar-splash-overlay">
+        <div class="dollar-splash-center">
+            <div class="splash-glow-pulse"></div>
+            <svg class="dollar-splash-ring">
+                <circle cx="80" cy="80" r="72"></circle>
+            </svg>
+            <div class="dollar-splash-icon">$</div>
+        </div>
+        <div class="splash-text">CRYPTO PRO</div>
+    </div>
     <div class="container animate-fade">
         <header class="main-nav">
             <div class="nav-container">
@@ -206,6 +217,19 @@
         let isEditing = false;
         let allocationChart = null;
         let valueTrendChart = null;
+
+        // Splash Screen / Reloader Logic
+        window.addEventListener('load', () => {
+            const overlay = document.getElementById('dollar-splash-overlay');
+            if (overlay) {
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.remove();
+                    }, 800);
+                }, 2200);
+            }
+        });
 
         // Register the datalabels plugin
         Chart.register(ChartDataLabels);
