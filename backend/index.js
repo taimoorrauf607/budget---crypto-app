@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 const supabase = require('./supabaseClient');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -13,6 +14,9 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
+// Serve static files from the parent directory
+app.use(express.static(path.join(__dirname, '../')));
 
 // --- Endpoints ---
 
@@ -122,9 +126,9 @@ app.get('/events/:user_id', async (req, res) => {
     }
 });
 
-// Root check
+// Root check - Serve index.html
 app.get('/', (req, res) => {
-    res.json({ message: 'Budget + Crypto Tracker API is running 🚀' });
+    res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 // Start Server
