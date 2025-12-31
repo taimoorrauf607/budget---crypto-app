@@ -10,6 +10,9 @@
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2D7FF9">
+
+
+
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="apple-touch-icon" href="logo.png">
 
@@ -42,31 +45,97 @@
             }
         }
     </script>
+    <style>
+        /* Splash Screen Styles */
+        #dollar-splash-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0f172a 0%, #064496 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            background: #2D7FF9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(45, 127, 249, 0.5);
+            animation: pulse-splash 2s infinite;
+        }
+
+        .splash-dollar {
+            font-size: 60px;
+            color: white;
+            font-weight: bold;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .splash-text {
+            margin-top: 20px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            opacity: 0;
+            animation: slide-up-fade 0.8s forwards 0.3s;
+        }
+
+        @keyframes pulse-splash {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(45, 127, 249, 0.7);
+            }
+
+            70% {
+                transform: scale(1.1);
+                box-shadow: 0 0 0 20px rgba(45, 127, 249, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(45, 127, 249, 0);
+            }
+        }
+
+        @keyframes slide-up-fade {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
 </head>
 
 <body class="transition-colors duration-300">
-    <!-- Dollar Splash Overlay -->
     <div id="dollar-splash-overlay">
-        <div class="dollar-splash-center">
-            <div class="splash-glow-pulse"></div>
-            <svg class="dollar-splash-ring">
-                <circle cx="80" cy="80" r="72"></circle>
-            </svg>
-            <div class="dollar-splash-icon">$</div>
+        <div class="splash-logo">
+            <div class="splash-dollar">$</div>
         </div>
-    </div>
-
-    <!-- Background Layer -->
-    <div class="bg-fixed-layer">
-        <div class="bg-grid"></div>
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
+        <div class="splash-text">BUDGET PRO</div>
     </div>
 
     <div id="root" class="max-w-7xl mx-auto px-4 py-8 relative z-10"></div>
 
     <script type="text/babel">
+
+
         const { useState, useEffect, useRef, useCallback } = React;
 
         // --- Configuration ---
@@ -586,7 +655,7 @@
                                 { id: 'loans', label: 'Loans', icon: Icons.Loans },
                                 { id: 'goalPlan', label: 'Planning', icon: Icons.Goals },
                                 { id: 'freelance', label: 'Freelance', icon: Icons.Freelance },
-                                { id: 'crypto', label: 'Crypto', icon: Icons.money, href: 'crypto app/index.html' },
+                                { id: 'crypto', label: 'Crypto', icon: Icons.money, href: 'crypto_app/index.html' },
                                 user.isAdmin && { id: 'admin', label: 'Admin', icon: Icons.Admin }
                             ].filter(Boolean).map(tab => (
                                 tab.href ? (
@@ -1472,50 +1541,19 @@
         root.render(<App />);
     </script>
     <script>
-        (function () {
+        // Splash Screen / Reloader Logic
+        window.addEventListener('load', () => {
             const overlay = document.getElementById('dollar-splash-overlay');
-            if (!overlay) return;
-
-            const icon = overlay.querySelector('.dollar-splash-icon');
-            const ring = overlay.querySelector('circle');
-            const glow = overlay.querySelector('.splash-glow-pulse');
-
-            // 1. Enter
-            icon.classList.add('anim-elastic-in');
-
-            // 2. Spin & Fill
-            setTimeout(() => {
-                icon.classList.add('anim-spin');
-
-                let progress = 0;
-                // Max offset is 339
-                const totalLength = 339;
-                const duration = 1200; // ms
-                const intervalTime = 20;
-                const step = totalLength / (duration / intervalTime);
-
-                const interval = setInterval(() => {
-                    progress += step;
-                    if (progress > totalLength) progress = totalLength;
-
-                    ring.style.strokeDashoffset = totalLength - progress;
-
-                    if (progress >= totalLength) {
-                        clearInterval(interval);
-
-                        // 3. Success & Exit
-                        glow.classList.add('active');
-
-                        setTimeout(() => {
-                            overlay.style.opacity = '0';
-                            overlay.style.pointerEvents = 'none';
-                            setTimeout(() => overlay.remove(), 500);
-                        }, 500);
-                    }
-                }, intervalTime);
-
-            }, 500);
-        })();
+            if (overlay) {
+                // Ensure it stays for at least 1.5 seconds for branding
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => {
+                        overlay.remove();
+                    }, 500);
+                }, 1500);
+            }
+        });
     </script>
 </body>
 
